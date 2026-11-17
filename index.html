@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revolution Z магазин</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Rubik:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Plan: the server's own MOTD colours (§6 gold, §c red, §8 grey) set as a revolution poster.
+   Sunburst rays + a pixel Z emblem own the hero; everything else is quiet dark panels.
+   Three views on the hash: #home (hub), #store (cart), #rules. */
+:root {
+  --ink: #0e0c0b;
+  --panel: #17130f;
+  --raise: #1f1914;
+  --line: #2e261e;
+  --paper: #f2e8d5;
+  --muted: #a3968a;
+  --gold: #f2b632;
+  --blood: #e0392b;
+  --display: "Russo One", "Arial Black", sans-serif;
+  --body: "Rubik", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --artisan: #1abc9c;
+  --vanguard: #e3a21a;
+  --patrician: #e91e63;
+  --mythic: #9b59b6;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--ink); color: var(--paper); font: 16px/1.55 var(--body); }
+a { color: var(--gold); }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+code, .mono { font-family: var(--mono); }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+h1, h2, h3 { text-wrap: balance; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ===== top bar ===== */
+.top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--ink) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 18px; height: 64px; }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--paper); font-family: var(--display); font-size: 18px; letter-spacing: .04em; white-space: nowrap; }
+.logo canvas { width: 30px; height: 30px; image-rendering: pixelated; }
+.logo span { color: var(--gold); }
+.tabs { display: flex; gap: 4px; margin-left: 12px; }
+.tabs a { color: var(--muted); text-decoration: none; padding: 8px 14px; border-radius: 6px; font-weight: 500; font-size: 15px; }
+.tabs a:hover { color: var(--paper); }
+.tabs a[aria-current="page"] { color: var(--ink); background: var(--gold); }
+.spacer { flex: 1; }
+.cart-btn { position: relative; }
+.badge { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; border-radius: 10px; background: var(--blood); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; padding: 0 5px; }
+.badge[hidden] { display: none; }
+
+/* ===== buttons ===== */
+.btn { appearance: none; border: 0; cursor: pointer; font: 500 15px var(--body); border-radius: 7px; padding: 10px 16px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: var(--paper); transition: background .15s, border-color .15s, transform .1s; }
+.btn:active { transform: translateY(1px); }
+.btn-gold { background: var(--gold); color: #1d1404; }
+.btn-gold:hover { background: #ffc94f; }
+.btn-red { background: var(--blood); color: #fff; }
+.btn-red:hover { background: #f04a3b; }
+.btn-line { background: transparent; border: 1px solid var(--line); }
+.btn-line:hover { border-color: var(--muted); }
+.btn-sm { padding: 7px 12px; font-size: 14px; }
+
+/* ===== views ===== */
+.view { display: none; }
+.view.on { display: block; }
+
+/* ===== hero ===== */
+.hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+#rays { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hero .wrap { position: relative; display: grid; grid-template-columns: 1.25fr 1fr; gap: 40px; align-items: center; padding-top: 56px; padding-bottom: 56px; }
+.stamp { display: inline-block; font-family: var(--display); font-size: 13px; letter-spacing: .14em; color: var(--blood); border: 2px solid var(--blood); padding: 4px 10px; transform: rotate(-3deg); }
+.hero h1 { font-family: var(--display); font-weight: 400; margin: 18px 0 10px; line-height: .9; font-size: clamp(40px, 7.4vw, 92px); white-space: nowrap; transform: skewY(-4deg); transform-origin: left; }
+.hero h1 .z { color: var(--gold); display: inline-block; text-shadow: 6px 6px 0 var(--blood); }
+.motd { display: flex; flex-wrap: wrap; gap: 8px 14px; font-family: var(--display); font-size: 15px; letter-spacing: .08em; color: var(--muted); margin: 26px 0 0; padding: 0; list-style: none; }
+.motd li:nth-child(odd) { color: var(--blood); }
+.motd li:last-child { color: var(--gold); }
+.hero p.lede { color: var(--muted); max-width: 52ch; margin: 18px 0 0; font-size: 17px; }
+
+.status { background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 14px; box-shadow: 0 30px 60px -30px #000; }
+.status-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.status-head h2 { font-family: var(--display); font-weight: 400; font-size: 16px; letter-spacing: .1em; margin: 0; }
+.pill { font-size: 12px; font-weight: 700; letter-spacing: .06em; padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--gold) 18%, transparent); color: var(--gold); }
+.addr { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; background: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 12px 12px 12px 14px; }
+.addr .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.addr code { font-size: 17px; font-weight: 700; grid-column: 1; }
+.addr button { grid-row: 1 / span 2; grid-column: 2; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fact { background: var(--raise); border-radius: 8px; padding: 10px; }
+.fact b { display: block; font-family: var(--display); font-weight: 400; font-size: 22px; line-height: 1.1; }
+.fact span { font-size: 12px; color: var(--muted); }
+.live-link { font-size: 13px; color: var(--muted); }
+
+/* ===== hub tiles ===== */
+.hub { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 120px; gap: 14px; padding: 36px 0; }
+.tile { position: relative; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; padding: 18px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); text-decoration: none; color: var(--paper); overflow: hidden; transition: border-color .15s, transform .15s; }
+.tile:hover { border-color: var(--gold); transform: translateY(-2px); }
+.tile h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 20px; }
+.tile p { margin: 0; font-size: 14px; color: var(--muted); }
+.tile .ico { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; image-rendering: pixelated; }
+.tile.big { grid-column: span 2; grid-row: span 2; background: linear-gradient(135deg, color-mix(in srgb, var(--blood) 30%, var(--panel)), var(--panel) 65%); }
+.tile.big h3 { font-size: 40px; }
+.tile.big p { font-size: 16px; max-width: 34ch; }
+.tile.big .ico { width: 88px; height: 88px; top: 22px; right: 22px; }
+.tile.vote { grid-column: span 2; background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 18%, var(--panel)), var(--panel) 70%); }
+
+/* ===== section heads ===== */
+.sec { padding: 40px 0; border-top: 1px solid var(--line); }
+.sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.sec-head h2 { font-family: var(--display); font-weight: 400; font-size: clamp(26px, 4vw, 36px); margin: 0; }
+.sec-head h2 i { font-style: normal; color: var(--blood); }
+.note { font-size: 13px; color: var(--muted); }
+
+/* ===== boards ===== */
+.boards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.board { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.board h3 { margin: 0 0 12px; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); display: flex; justify-content: space-between; }
+.board h3 span { color: var(--muted); letter-spacing: 0; text-transform: none; }
+.row { display: grid; grid-template-columns: 22px 28px 1fr auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.row:first-of-type { border-top: 0; }
+.row .pos { font-family: var(--display); color: var(--muted); }
+.row:nth-of-type(1) .pos { color: var(--gold); }
+.row canvas { width: 28px; height: 28px; image-rendering: pixelated; border-radius: 4px; }
+.row .val { font-family: var(--mono); font-weight: 700; }
+
+/* supporters podium */
+.podium { display: grid; grid-template-columns: 1fr 1.2fr 1fr; align-items: end; gap: 10px; margin-top: 4px; }
+.step { background: var(--raise); border: 1px dashed var(--line); border-radius: 10px 10px 0 0; display: grid; place-items: center; text-align: center; gap: 6px; padding: 14px 8px; color: var(--muted); font-size: 13px; }
+.step b { font-family: var(--display); font-weight: 400; font-size: 26px; color: var(--paper); }
+.step canvas { width: 30px; height: 30px; image-rendering: pixelated; border-radius: 4px; }
+.step span { color: var(--paper); font-size: 13px; }
+.step.p1 { height: 150px; border-color: color-mix(in srgb, var(--gold) 50%, var(--line)); }
+.step.p1 b { color: var(--gold); }
+.step.p2 { height: 118px; }
+.step.p3 { height: 96px; }
+.empty-line { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
+
+/* purchases ticker */
+.ticker { display: flex; align-items: center; gap: 14px; background: var(--panel); border: 1px dashed var(--line); border-radius: 12px; padding: 16px 18px; color: var(--muted); }
+.ticker .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+
+/* vote */
+.votes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.vote-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; }
+.vote-card h3 { margin: 0; font-size: 17px; }
+.vote-card p { margin: 0; font-size: 13px; color: var(--muted); }
+
+/* news */
+.news { display: grid; grid-template-columns: 300px 1fr; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.news canvas { width: 100%; height: 100%; min-height: 200px; image-rendering: pixelated; display: block; }
+.news .body { padding: 22px; display: grid; gap: 10px; align-content: start; }
+.news .meta { font-size: 13px; color: var(--muted); }
+.news h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 24px; }
+.news ul { margin: 0; padding-left: 18px; color: var(--muted); }
+
+/* ===== store ===== */
+.store-head { padding: 40px 0 8px; display: grid; gap: 14px; }
+.store-head h1 { font-family: var(--display); font-weight: 400; font-size: clamp(36px, 6vw, 64px); margin: 0; line-height: 1; }
+.store-head h1 span { color: var(--gold); }
+.notice { background: color-mix(in srgb, var(--blood) 14%, var(--panel)); border: 1px solid color-mix(in srgb, var(--blood) 40%, var(--line)); border-radius: 10px; padding: 12px 16px; font-size: 14px; }
+.cats { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0 6px; }
+.cats button { appearance: none; font: 500 14px var(--body); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; cursor: pointer; }
+.cats button[aria-pressed="true"] { color: var(--ink); background: var(--paper); border-color: var(--paper); }
+.group { padding: 22px 0 10px; }
+.group[hidden] { display: none; }
+.group h2 { font-family: var(--display); font-weight: 400; font-size: 26px; margin: 0 0 16px; display: flex; gap: 12px; align-items: center; }
+.group h2 small { font-family: var(--body); font-size: 14px; color: var(--muted); }
+
+.base { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; background: var(--panel); border: 1px dashed var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; font-size: 14px; color: var(--muted); }
+.base strong { color: var(--paper); font-weight: 500; margin-right: 6px; }
+.base b { color: var(--paper); font-family: var(--mono); font-size: 13px; }
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+#key-cards { grid-template-columns: repeat(2, minmax(0, 380px)); }
+.card { position: relative; display: flex; flex-direction: column; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; overflow: hidden; }
+.card::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--tier); }
+.card .tag { position: absolute; top: 14px; right: 14px; font-size: 11px; font-weight: 700; letter-spacing: .08em; padding: 3px 8px; border-radius: 5px; background: var(--raise); color: var(--muted); }
+.card .tag.hot { background: var(--blood); color: #fff; }
+.card canvas.ico { width: 72px; height: 72px; image-rendering: pixelated; }
+.card canvas.minion { width: 88px; height: 88px; filter: drop-shadow(0 6px 0 rgba(0,0,0,.35)); animation: bob 2.6s ease-in-out infinite; }
+.card:nth-child(2) canvas.minion { animation-delay: -.6s; }
+.card:nth-child(3) canvas.minion { animation-delay: -1.2s; }
+.card:nth-child(4) canvas.minion { animation-delay: -1.8s; filter: drop-shadow(0 0 10px var(--mythic)) drop-shadow(0 6px 0 rgba(0,0,0,.35)); }
+.card:hover canvas.minion { animation-duration: .9s; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.card h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 26px; color: var(--tier); line-height: 1; }
+.card .desc { margin: 0; color: var(--muted); font-size: 14px; }
+.perks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.perks li { display: grid; grid-template-columns: 12px 1fr; gap: 8px; }
+.perks li::before { content: ""; width: 6px; height: 6px; margin-top: 8px; background: var(--tier); }
+.perks b { color: var(--tier); font-weight: 700; font-family: var(--mono); font-size: 13px; }
+.perks li.more { display: none; }
+.card.open .perks li.more { display: grid; }
+.toggle { appearance: none; background: none; border: 1px solid var(--line); color: var(--paper); border-radius: 6px; padding: 7px; font: 500 13px var(--body); cursor: pointer; }
+.toggle:hover { border-color: var(--tier); }
+.earn { border-top: 1px dashed var(--line); padding-top: 12px; display: grid; gap: 6px; font-size: 12px; color: var(--muted); }
+.earn .reqs { display: flex; flex-wrap: wrap; gap: 5px; }
+.earn .reqs span { background: var(--raise); color: var(--paper); border-radius: 4px; padding: 2px 6px; font-family: var(--mono); font-size: 12px; }
+.price-row { margin-top: auto; display: grid; gap: 10px; }
+.price { font-family: var(--display); font-size: 32px; line-height: 1; }
+.price small { font-family: var(--body); font-size: 13px; color: var(--muted); margin-left: 6px; }
+.buy { display: grid; grid-template-columns: auto 1fr; gap: 8px; }
+.card.mythic { border-color: color-mix(in srgb, var(--mythic) 55%, var(--line)); box-shadow: 0 24px 50px -26px var(--mythic); }
+.card.legend { border-color: color-mix(in srgb, var(--gold) 55%, var(--line)); background: linear-gradient(170deg, color-mix(in srgb, var(--gold) 12%, var(--panel)), var(--panel) 55%); }
+.qty { display: flex; gap: 6px; }
+.qty button { appearance: none; flex: 1; font: 500 13px var(--body); color: var(--muted); background: var(--raise); border: 1px solid var(--line); border-radius: 6px; padding: 6px 4px; cursor: pointer; }
+.qty button[aria-pressed="true"] { color: var(--paper); border-color: var(--tier); }
+.earned-only { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; color: var(--muted); font-size: 14px; }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; color: var(--paper); font-size: 13px; }
+
+/* cart drawer */
+.drawer { position: fixed; inset: 0; z-index: 30; display: none; }
+.drawer.open { display: block; }
+.drawer .shade { position: absolute; inset: 0; background: rgba(5,4,3,.65); }
+.drawer aside { position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, 100%); background: var(--panel); border-left: 1px solid var(--line); display: grid; grid-template-rows: auto 1fr auto; }
+.drawer header, .drawer footer { padding: 18px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.drawer footer { border-top: 1px solid var(--line); border-bottom: 0; display: grid; gap: 12px; }
+.drawer h2 { font-family: var(--display); font-weight: 400; font-size: 22px; margin: 0; }
+.lines { overflow: auto; padding: 8px 20px; }
+.line { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.line small { display: block; color: var(--muted); font-size: 12px; }
+.line .x { appearance: none; background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 18px; padding: 4px 8px; }
+.line .x:hover { color: var(--blood); }
+.total { display: flex; justify-content: space-between; font-family: var(--display); font-size: 22px; }
+.nick { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+.nick input { font: 500 15px var(--mono); color: var(--paper); background: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.empty-cart { color: var(--muted); padding: 30px 0; text-align: center; }
+
+/* dialog */
+.modal { position: fixed; inset: 0; z-index: 40; background: rgba(5,4,3,.7); display: none; place-items: center; padding: 20px; }
+.modal.open { display: grid; }
+.sheet { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; max-width: 440px; width: 100%; padding: 24px; display: grid; gap: 14px; }
+.sheet h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 24px; }
+.sheet p { margin: 0; color: var(--muted); }
+.sheet .actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* rules */
+.rules { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; padding-bottom: 40px; }
+.rule { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; grid-template-columns: 54px 1fr; gap: 4px 16px; }
+.rule .n { grid-row: span 3; font-family: var(--display); font-size: 40px; color: var(--blood); line-height: 1; }
+.rule h3 { margin: 0; font-size: 18px; }
+.rule p { margin: 0; color: var(--muted); font-size: 15px; }
+.rule .pen { font-size: 13px; color: var(--gold); }
+
+footer.site { border-top: 1px solid var(--line); padding: 26px 0 40px; font-size: 13px; color: var(--muted); }
+footer.site .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 50; background: var(--paper); color: var(--ink); padding: 9px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+@media (max-width: 1000px) {
+  .hero .wrap { grid-template-columns: 1fr; }
+  .hub { grid-template-columns: repeat(2, 1fr); }
+  .boards, .votes { grid-template-columns: repeat(2, 1fr); }
+  .cards { grid-template-columns: repeat(2, 1fr); }
+  .news { grid-template-columns: 1fr; }
+  .news canvas { min-height: 160px; max-height: 200px; }
+}
+@media (max-width: 640px) {
+  .tabs a { padding: 8px 10px; }
+  .logo b { display: none; }
+  .hub { grid-template-columns: 1fr; grid-auto-rows: auto; }
+  .tile { min-height: 110px; }
+  .tile.big, .tile.vote { grid-column: auto; grid-row: auto; min-height: 200px; }
+  .boards, .votes, .cards, #key-cards, .rules { grid-template-columns: 1fr; }
+  .facts { grid-template-columns: repeat(3, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile, .btn { transition: none; }
+  .card canvas.minion { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#home"><canvas width="8" height="8" data-emblem aria-hidden="true"></canvas><b>REVOLUTION</b>&nbsp;<span>Z</span></a>
+    <nav class="tabs" aria-label="Страници">
+      <a href="#home" data-tab="home">Начало</a>
+      <a href="#store" data-tab="store">Магазин</a>
+      <a href="#rules" data-tab="rules">Правила</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn btn-line btn-sm cart-btn" type="button" id="open-cart" aria-label="Количка">
+      Количка <span class="badge num" id="cart-count" hidden>0</span>
+    </button>
+  </div>
+</header>
+
+<!-- ================= HOME ================= -->
+<main class="view" id="view-home">
+  <section class="hero">
+    <canvas id="rays" aria-hidden="true"></canvas>
+    <div class="wrap">
+      <div>
+        <span class="stamp">СЕЗОН 1 · 26.3</span>
+        <h1>REVOLUTION <span class="z">Z</span></h1>
+        <ul class="motd" aria-label="Какво има в сървъра">
+          <li>SMP</li><li>PvP</li><li>КЛАНОВЕ</li><li>ИВЕНТИ ВСЕКИ ДЕН</li>
+        </ul>
+        <p class="lede">Survival, в който ранговете се изкарват с игра: куестове, изиграно време и изкопани блокове. Влез, вземи си парцел със златна лопата и започни революцията.</p>
+      </div>
+
+      <div class="status" aria-label="Как да влезеш">
+        <div class="status-head"><h2>ВЛЕЗ СЕГА</h2><span class="pill">26.3</span></div>
+        <div class="addr">
+          <span class="k">Java</span>
+          <code>play.revolutionz.eu</code>
+          <button class="btn btn-gold btn-sm" type="button" data-copy="play.revolutionz.eu">Копирай</button>
+        </div>
+        <div class="addr">
+          <span class="k">Bedrock · порт 25594</span>
+          <code>play.revolutionz.eu</code>
+          <button class="btn btn-line btn-sm" type="button" data-copy="play.revolutionz.eu">Копирай</button>
+        </div>
+        <div class="facts">
+          <div class="fact"><b class="num">150</b><span>слота</span></div>
+          <div class="fact"><b class="num">15</b><span>куеста</span></div>
+          <div class="fact"><b class="num">4</b><span>ранга за игра</span></div>
+        </div>
+        <a class="live-link" href="https://mcsrvstat.us/server/play.revolutionz.eu">Виж кой е онлайн в момента ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <nav class="hub" aria-label="Бърз достъп">
+      <a class="tile big" href="#store">
+        <canvas class="ico" width="12" height="12" data-icon="chest" aria-hidden="true"></canvas>
+        <h3>Магазин</h3>
+        <p>Рангове и ключове за кутии. Conqueror и Legendary се печелят само в играта.</p>
+      </a>
+      <a class="tile vote" href="#vote">
+        <canvas class="ico" width="12" height="12" data-icon="star" aria-hidden="true"></canvas>
+        <h3>Гласувай всеки ден</h3>
+        <p>4 сайта, ключ Vote за всеки глас.</p>
+      </a>
+      <a class="tile" href="https://discord.gg/zPWeeXAkJD">
+        <canvas class="ico" width="12" height="12" data-icon="chat" aria-hidden="true"></canvas>
+        <h3>Discord</h3>
+        <p>Новини, тикети, идеи</p>
+      </a>
+      <a class="tile" href="#rules">
+        <canvas class="ico" width="12" height="12" data-icon="book" aria-hidden="true"></canvas>
+        <h3>Правила</h3>
+        <p>Прочети преди да влезеш</p>
+      </a>
+    </nav>
+  </div>
+
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Класации <i>/</i> най-добрите</h2>
+        <span class="note" id="boards-note">Сезон 1 започва от нула · класациите се пълнят с първите гласове, покупки и битки</span>
+      </div>
+      <div class="boards">
+        <div class="board" data-board="voters">
+          <h3>Топ гласуващи <span>този месец</span></h3>
+          <div class="podium" data-podium></div>
+          <p class="empty-line">Още няма гласове. Гласувай и вземи първото място.</p>
+        </div>
+        <div class="board" data-board="donors">
+          <h3>Топ донатори <span>този месец</span></h3>
+          <div class="podium" data-podium></div>
+          <p class="empty-line">Още няма поддръжници. Първата покупка заема върха.</p>
+        </div>
+        <div class="board" data-board="killers">
+          <h3>Топ убийци <span>PvP</span></h3>
+          <div class="podium" data-podium></div>
+          <p class="empty-line">Още няма PvP убийства. Първата кръв е твоя.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head"><h2>Последни покупки</h2></div>
+      <div class="ticker"><span class="dot"></span>Още няма покупки. Тук ще се показват на живо, щом магазинът се пусне.</div>
+    </div>
+  </section>
+
+  <section class="sec" id="vote">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Гласувай <i>/</i> вземи Vote ключ</h2>
+        <span class="note">Въведи ника си в сайта · ключът идва в играта</span>
+      </div>
+      <div class="votes">
+        <div class="vote-card"><h3>Minecraft-MP</h3><p>minecraft-mp.com</p><a class="btn btn-line btn-sm" href="https://minecraft-mp.com/server/366519/vote/">Гласувай ↗</a></div>
+        <div class="vote-card"><h3>MinecraftServers</h3><p>minecraftservers.org</p><a class="btn btn-line btn-sm" href="https://minecraftservers.org/vote/696090">Гласувай ↗</a></div>
+        <div class="vote-card"><h3>TopG</h3><p>topg.org</p><a class="btn btn-line btn-sm" href="https://topg.org/tr/minecraft-sunucular/server-688377#vote">Гласувай ↗</a></div>
+        <div class="vote-card"><h3>Minecraft.buzz</h3><p>minecraft.buzz</p><a class="btn btn-line btn-sm" href="https://minecraft.buzz/vote/revolution-z">Гласувай ↗</a></div>
+      </div>
+    </div>
+  </section>
+
+
+</main>
+
+<!-- ================= STORE ================= -->
+<main class="view" id="view-store">
+  <div class="wrap">
+    <div class="store-head">
+      <h1>МАГАЗИН <span>/</span> REVOLUTION Z</h1>
+      <div class="notice">Плащането е сигурно, през Tebex. Цените са без ДДС, той се добавя при плащане според държавата ти.</div>
+      <div class="cats" role="group" aria-label="Категории">
+        <button type="button" aria-pressed="true" data-cat="all">Всичко</button>
+        <button type="button" aria-pressed="false" data-cat="ranks">Рангове</button>
+        <button type="button" aria-pressed="false" data-cat="keys">Ключове</button>
+      </div>
+    </div>
+
+    <section class="group" data-group="ranks">
+      <h2>Рангове <small>завинаги · ролята в Discord идва сама</small></h2>
+      <div class="base">
+        <strong>Vagabond · безплатно за всеки</strong>
+        <span><b>/rtp</b> случаен телепорт</span><span><b>/spawn</b></span><span><b>/warp</b></span><span><b>1</b> home</span><span><b>1</b> личен сандък</span><span>кит <b>Vagabond</b></span><span>до <b>2</b> професии</span>
+      </div>
+      <div class="cards" id="rank-cards"></div>
+    </section>
+
+    <section class="group" data-group="keys">
+      <h2>Ключове за кутии <small>отварят се на спавна</small></h2>
+      <div class="cards" id="key-cards"></div>
+      <div class="earned-only">Не се продават, само в играта:
+        <span class="chip">Vote · гласуване</span><span class="chip">Event · ивенти</span><span class="chip">Koth · KOTH</span><span class="chip">Conqueror</span><span class="chip">Legendary</span>
+      </div>
+    </section>
+    <div style="height:40px"></div>
+  </div>
+</main>
+
+<!-- ================= RULES ================= -->
+<main class="view" id="view-rules">
+  <div class="wrap">
+    <div class="store-head">
+      <h1>ПРАВИЛА <span>/</span> REVOLUTION Z</h1>
+      <p class="note" style="margin:0">Влизайки в сървъра, се съгласяваш да спазваш тези правила.</p>
+    </div>
+    <div class="rules" style="margin-top:20px">
+      <div class="rule"><span class="n">01</span><h3>Хакове и модификации</h3><p>X-ray, hacked клиенти, killaura, fly и всякакви неразрешени помощни средства са забранени.</p><span class="pen">Наказание: перманентен бан</span></div>
+      <div class="rule"><span class="n">02</span><h3>Грифинг и кражби</h3><p>Разрушаване на чужди бази, кражби и умишлено пречене на другите играчи са забранени.</p></div>
+      <div class="rule"><span class="n">03</span><h3>Чат етикет</h3><p>Без обиди, заплахи, расизъм, спам и реклама на други сървъри. Отнасяй се с уважение към всички.</p></div>
+      <div class="rule"><span class="n">04</span><h3>Бъгове и експлойти</h3><p>Използването на бъгове и дупене на предмети е забранено. Ако намериш бъг, докладвай го с тикет в Discord.</p></div>
+      <div class="rule"><span class="n">05</span><h3>Екипът на сървъра</h3><p>Решенията на администрацията са окончателни. Наказанията се обсъждат само в тикет, не в общия чат.</p></div>
+    </div>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>Revolution Z · Survival SMP 26.3 · <a href="https://discord.gg/zPWeeXAkJD">discord.gg/zPWeeXAkJD</a></span>
+    <span>Revolution Z не е свързан с Mojang или Microsoft.</span>
+  </div>
+</footer>
+
+<!-- cart -->
+<div class="drawer" id="cart" aria-hidden="true">
+  <div class="shade" data-close-cart></div>
+  <aside role="dialog" aria-modal="true" aria-labelledby="cart-title">
+    <header><h2 id="cart-title">Количка</h2><button class="btn btn-line btn-sm" type="button" data-close-cart>Затвори</button></header>
+    <div class="lines" id="cart-lines"></div>
+    <footer>
+      <label class="nick" for="nick">Ник в Minecraft
+        <input id="nick" type="text" autocomplete="off" spellcheck="false" placeholder="напр. F1reFox72" maxlength="16">
+      </label>
+      <div class="total"><span>Общо</span><span class="num" id="cart-total">€0.00</span></div>
+      <button class="btn btn-red" type="button" id="checkout">Към плащане</button>
+    </footer>
+  </aside>
+</div>
+
+<div class="modal" id="pay" role="dialog" aria-modal="true" aria-labelledby="pay-title">
+  <div class="sheet">
+    <h3 id="pay-title">Поръчка</h3>
+    <p id="pay-text"></p>
+    <div class="actions">
+      <button class="btn btn-line" type="button" id="pay-close">Назад</button>
+      <a class="btn btn-gold" id="pay-go" href="https://discord.gg/zPWeeXAkJD">Отвори Discord</a>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+// When the Tebex store exists, put its address here; checkout will send buyers there.
+const STORE_URL = "https://revolution-z.tebex.store/";
+const DISCORD_URL = "https://discord.gg/zPWeeXAkJD";
+
+/* ---------- catalogue ---------- */
+const RANKS = [
+  { id: "artisan", name: "Artisan", tier: "--artisan", crown: "#1abc9c", price: 7.49, tag: "РАНГ I",
+    desc: "Първата стъпка над Vagabond.",
+    perks: ["Всичко от Vagabond", "<b>/ec</b> – ендър сандък навсякъде", "<b>/craft</b> – работна маса навсякъде", "<b>2</b> home-а", "Кит <b>Artisan</b>", "До <b>3</b> професии в Jobs", "Роля Artisan в Discord"],
+    reqs: ["10 ч", "20 куест т.", "4 000 блока", "$25 000"] },
+  { id: "vanguard", name: "Vanguard", tier: "--vanguard", crown: "#e3a21a", price: 12.49, tag: "РАНГ II",
+    desc: "Поправяш и се храниш, без да се прибираш.",
+    perks: ["Всичко от Artisan", "<b>/repair</b> – поправя предмета в ръката", "<b>/feed</b> – засища глада", "<b>/anvil</b> – наковалня навсякъде", "<b>3</b> home-а", "<b>2</b> лични сандъка (<b>/pv</b>)", "Кит <b>Vanguard</b>", "До <b>4</b> професии в Jobs", "Роля Vanguard в Discord"],
+    reqs: ["35 ч", "50 куест т.", "15 000 блока", "$75 000"] },
+  { id: "patrician", name: "Patrician", tier: "--patrician", crown: "#e91e63", price: 19.99, tag: "РАНГ III",
+    desc: "Тук идва летенето.",
+    perks: ["Всичко от Vanguard", "<b>/fly</b> – летене в survival", "<b>/back</b> – връща те на последното място", "<b>/grindstone</b> – точило навсякъде", "<b>5</b> home-а", "<b>3</b> лични сандъка (<b>/pv</b>)", "Кит <b>Patrician</b>", "До <b>5</b> професии в Jobs", "Роля Patrician в Discord"],
+    reqs: ["80 ч", "90 куест т.", "30 000 блока", "$150 000"] },
+  { id: "mythic", name: "Mythic", tier: "--mythic", crown: "#9b59b6", price: 34.99, tag: "НАЙ-ВИСОК", hot: true,
+    desc: "Върхът на Revolution Z.",
+    perks: ["Всичко от Patrician (вкл. /fly)", "<b>/nick</b> – собствено име в чата", "<b>/hat</b> – слагаш всеки блок на главата", "<b>10</b> home-а", "<b>4</b> лични сандъка (<b>/pv</b>)", "Кит <b>Mythic</b>", "До <b>6</b> професии в Jobs", "Роля Mythic в Discord"],
+    reqs: ["150 ч", "150 куест т.", "60 000 блока", "$300 000"] }
+];
+const KEYS = [
+  { id: "nature", name: "Nature", tier: "--artisan", color: "#3fa34d", price: 1.50, pack: 4.00,
+    desc: "Дървета, руди, sniffer яйце, златни ябълки." },
+  { id: "inferno", name: "Inferno", tier: "--blood", color: "#e2562a", price: 2.50, pack: 6.00,
+    desc: "Blaze, netherite scrap, шаблон за netherite." },
+  /* Conqueror и Legendary – временно не се продават (само в играта)
+  { id: "conqueror", name: "Conqueror", tier: "--vanguard", color: "#d9b23a", price: 5.00, pack: 12.00,
+    desc: "Emperor's и King's броня, elytra, dragon egg." },
+  { id: "legendary", name: "Legendary", tier: "--gold", color: "#f2b632", price: 9.00, pack: null, legend: true,
+    desc: "Най-рядката кутия: сетове с Protection 6, Unbreaking 4, Sharpness 6." }
+  */
+];
+
+// Tebex packages (headless API, public token is safe to share)
+const TEBEX_TOKEN = "15b66-14e298e6ad6d5cb155ab18430e5ac743dc580297";
+const PKG = { artisan: 7810571, vanguard: 7810573, patrician: 7810577, mythic: 7810579, nature: [7810587, 7810588], inferno: [7810589, 7810593] };
+
+const euro = n => "€" + n.toFixed(2);
+
+/* ---------- pixel art ---------- */
+function paint(c, rows, pal) {
+  const g = c.getContext("2d");
+  g.clearRect(0, 0, c.width, c.height);
+  rows.forEach((r, y) => [...r].forEach((ch, x) => { if (pal[ch]) { g.fillStyle = pal[ch]; g.fillRect(x, y, 1, 1); } }));
+}
+const EMBLEM = ["GGGGGGGG","GRRRRRRG","GGGGGRRG","GGGGRRGG","GGGRRGGG","GGRRGGGG","GRRRRRRG","GGGGGGGG"];
+// Revolution Z minions: little hooded rebels, one per rank, each with its own gear
+const MINION = [
+  "................",
+  "................",
+  ".....OOOOOO.....",
+  "....OCCCCCCO....",
+  "...OCCHHHHCCO...",
+  "...OCSSSSSSCO...",
+  "...OSEPSSEPSO...",
+  "...OSSSSSSSSO...",
+  "...OCSSMMSSCO...",
+  "....OCCCCCCO....",
+  "...OcCCZZCCcO...",
+  "..OScCCZZCCcSO..",
+  "..OScCCCCCCcSO..",
+  "...OcCCCCCCcO...",
+  "....OccOOccO....",
+  "....OOO..OOO...."
+];
+const GEAR = {
+  artisan:   { at: [[13,9,"T"],[14,8,"I"],[12,8,"I"],[13,8,"I"],[11,7,"I"],[15,7,"I"],[13,10,"T"],[13,11,"T"]] },
+  vanguard:  { at: [[0,9,"B"],[1,9,"B"],[0,10,"B"],[1,10,"G"],[0,11,"B"],[1,11,"B"],[0,12,"B"],[1,12,"B"],[1,13,"B"]] },
+  patrician: { at: [[13,3,"T"],[13,4,"T"],[13,5,"T"],[13,6,"T"],[13,7,"T"],[13,8,"T"],[13,9,"T"],[13,10,"T"],[14,3,"F"],[15,3,"F"],[14,4,"F"],[15,4,"F"],[14,5,"F"]] },
+  mythic:    { at: [[7,0,"G"],[8,0,"G"],[6,1,"G"],[7,1,"W"],[8,1,"G"],[9,1,"G"]] }
+};
+function drawMinion(c, id, color) {
+  const shade = c => { const n = parseInt(c.slice(1), 16); const f = .62; return "#" + [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.round(v * f).toString(16).padStart(2, "0")).join(""); };
+  const pal = { O: "#120d09", C: color, c: shade(color), H: shade(color), S: "#e8b98f", E: "#ffffff", P: "#1d1404", M: "#8a4a32", Z: "#f2b632", T: "#7a5230", I: "#cfd6dc", B: "#8a8f96", G: "#f2b632", F: color, W: "#ffffff" };
+  paint(c, MINION, pal);
+  const g = c.getContext("2d");
+  (GEAR[id] ? GEAR[id].at : []).forEach(([x, y, k]) => { g.fillStyle = pal[k]; g.fillRect(x, y, 1, 1); });
+}
+const KEY = ["....XXXX....","...X....X...","..X..WW..X..","..X..WW..X..","...X....X...","....XXXX....",".....XX.....",".....XX.....",".....XXXX...",".....XX.....",".....XXX....",".....XX....."];
+const ICONS = {
+  chest: { rows: ["............",".DDDDDDDDDD.",".DBBBBBBBBD.",".DBBBBBBBBD.",".DDDDDDDDDD.",".DBBBGGBBBD.",".DBBBGGBBBD.",".DBBBBBBBBD.",".DBBBBBBBBD.",".DDDDDDDDDD.","............","............"], pal: { D: "#5a3b1c", B: "#a0692e", G: "#f2b632" } },
+  star: { rows: [".....YY.....",".....YY.....","....YYYY....","YYYYYYYYYYYY",".YYYYYYYYYY.","..YYYYYYYY..","...YYYYYY...","..YYYYYYYY..","..YYY..YYY..",".YYY....YYY.",".YY......YY.","............"], pal: { Y: "#f2b632" } },
+  chat: { rows: ["............",".BBBBBBBBBB.",".BBBBBBBBBB.",".BBWBBBBWBB.",".BBWBBBBWBB.",".BBBBBBBBBB.",".BBWWWWWWBB.",".BBBBBBBBBB.","..BB........",".BB.........","............","............"], pal: { B: "#5865f2", W: "#ffffff" } },
+  book: { rows: ["............","..RRRRRRRR..","..RPPPPPPR..","..RPLLLLPR..","..RPPPPPPR..","..RPLLLLPR..","..RPPPPPPR..","..RPLLLPPR..","..RPPPPPPR..","..RRRRRRRR..","............","............"], pal: { R: "#e0392b", P: "#f2e8d5", L: "#8a7a6a" } }
+};
+document.querySelectorAll("canvas[data-emblem]").forEach(c => paint(c, EMBLEM, { G: "#f2b632", R: "#e0392b" }));
+document.querySelectorAll("canvas[data-icon]").forEach(c => { const i = ICONS[c.dataset.icon]; paint(c, i.rows, i.pal); });
+
+// a small deterministic Minecraft-style face for each player name
+function hash(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function drawFace(c) {
+  const h = hash(c.dataset.face);
+  const skins = ["#c68e6b", "#e0b48a", "#8d5a3b", "#f1c9a5", "#6b4430"];
+  const hairs = ["#2b1d14", "#6b3e1f", "#d8b04a", "#1b1b1b", "#a33a2a", "#4a6b8a"];
+  const eyes = ["#3b6cc4", "#3d8b4a", "#5a3b1c", "#7a3aa8"];
+  const pal = { S: skins[h % 5], H: hairs[(h >> 3) % 6], E: eyes[(h >> 6) % 4], W: "#ffffff", M: "#6b3a2a" };
+  const fringe = (h >> 9) % 2 ? "HHHHHHHH" : "HHSHHHHH";
+  paint(c, ["HHHHHHHH", fringe, "HSSSSSSH", "SSSSSSSS", "SWESSEWS", "SSSSSSSS", "SSMMMMSS", "SSSSSSSS"], pal);
+}
+document.querySelectorAll("canvas[data-face]").forEach(drawFace);
+
+
+
+/* ---------- leaderboards ----------
+   LIVE is filled from the server when the site is connected to it.
+   Each entry: { name, value }. Empty lists show free podium places. */
+const LIVE = { voters: [], donors: [], killers: [] };
+const UNITS = { voters: "гласа", donors: "", killers: "убийства" };
+function renderBoards() {
+  document.querySelectorAll("[data-board]").forEach(b => {
+    const list = LIVE[b.dataset.board] || [];
+    const pod = b.querySelector("[data-podium]");
+    pod.innerHTML = "";
+    [[1, "p2"], [0, "p1"], [2, "p3"]].forEach(([i, cls]) => {
+      const e = list[i];
+      const st = document.createElement("div");
+      st.className = "step " + cls;
+      if (e) {
+        st.innerHTML = `<canvas width="8" height="8" data-face="${e.name}"></canvas><b>${i + 1}</b><span>${e.name}</span><span class="num">${b.dataset.board === "donors" ? euro(e.value) : e.value + " " + UNITS[b.dataset.board]}</span>`;
+      } else {
+        st.innerHTML = `<b>${i + 1}</b>свободно`;
+      }
+      pod.appendChild(st);
+    });
+    b.querySelector(".empty-line").hidden = list.length > 0;
+    pod.querySelectorAll("canvas[data-face]").forEach(drawFace);
+  });
+}
+
+/* ---------- store rendering ---------- */
+function rankCard(r) {
+  const el = document.createElement("article");
+  el.className = "card" + (r.id === "mythic" ? " mythic" : "");
+  el.style.setProperty("--tier", `var(${r.tier})`);
+  el.innerHTML = `
+    <span class="tag${r.hot ? " hot" : ""}">${r.tag}</span>
+    <canvas class="ico minion" width="16" height="16" aria-hidden="true"></canvas>
+    <h3>${r.name}</h3>
+    <p class="desc">${r.desc}</p>
+    <ul class="perks">${r.perks.map((p, i) => `<li${i > 3 ? ' class="more"' : ""}><span>${p}</span></li>`).join("")}</ul>
+    ${r.perks.length > 4 ? `<button class="toggle" type="button" aria-expanded="false">Виж всички ${r.perks.length} предимства</button>` : ""}
+    <div class="earn"><span>Или го изкарай в играта:</span><div class="reqs">${r.reqs.map(q => `<span>${q}</span>`).join("")}</div></div>
+    <div class="price-row">
+      <div class="price num">${euro(r.price)}<small>завинаги</small></div>
+      <div class="buy">
+        <button class="btn btn-line btn-sm" type="button" data-add="${r.id}">В количката</button>
+        <button class="btn btn-red btn-sm" type="button" data-now="${r.id}">Купи сега</button>
+      </div>
+    </div>`;
+  drawMinion(el.querySelector("canvas"), r.id, r.crown);
+  const t = el.querySelector(".toggle");
+  if (t) t.addEventListener("click", () => { const o = el.classList.toggle("open"); t.setAttribute("aria-expanded", o); t.textContent = o ? "Скрий" : `Виж всички ${r.perks.length} предимства`; });
+  return el;
+}
+function keyCard(k) {
+  const el = document.createElement("article");
+  el.className = "card" + (k.legend ? " legend" : "");
+  el.style.setProperty("--tier", `var(${k.tier})`);
+  el.innerHTML = `
+    <span class="tag${k.legend ? " hot" : ""}">${k.legend ? "МНОГО РЯДЪК ДРОП" : "КЛЮЧ"}</span>
+    <canvas class="ico" width="12" height="12" aria-hidden="true"></canvas>
+    <h3>${k.name}</h3>
+    <p class="desc">${k.desc}</p>
+    ${k.pack ? `<div class="qty" role="group" aria-label="Брой"><button type="button" aria-pressed="true" data-q="1">1 ключ</button><button type="button" aria-pressed="false" data-q="3">3 ключа</button></div>` : ""}
+    <div class="price-row">
+      <div class="price num"><span data-price>${euro(k.price)}</span><small data-save></small></div>
+      <div class="buy">
+        <button class="btn btn-line btn-sm" type="button" data-add="${k.id}">В количката</button>
+        <button class="btn btn-red btn-sm" type="button" data-now="${k.id}">Купи сега</button>
+      </div>
+    </div>`;
+  paint(el.querySelector("canvas"), KEY, { X: k.color, W: "#ffffff" });
+  el.dataset.q = "1";
+  el.querySelectorAll("[data-q]").forEach(b => b.addEventListener("click", () => {
+    el.dataset.q = b.dataset.q;
+    el.querySelectorAll("[data-q]").forEach(x => x.setAttribute("aria-pressed", x === b));
+    const three = b.dataset.q === "3";
+    el.querySelector("[data-price]").textContent = euro(three ? k.pack : k.price);
+    el.querySelector("[data-save]").textContent = three ? `спестяваш ${euro(k.price * 3 - k.pack)}` : "";
+  }));
+  return el;
+}
+renderBoards();
+const rankBox = document.getElementById("rank-cards");
+RANKS.forEach(r => rankBox.appendChild(rankCard(r)));
+const keyBox = document.getElementById("key-cards");
+KEYS.forEach(k => keyBox.appendChild(keyCard(k)));
+
+/* ---------- categories ---------- */
+document.querySelectorAll("[data-cat]").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-cat]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  document.querySelectorAll("[data-group]").forEach(g => g.hidden = !(b.dataset.cat === "all" || b.dataset.cat === g.dataset.group));
+}));
+
+/* ---------- cart ---------- */
+const cart = [];
+const find = id => RANKS.find(r => r.id === id) || KEYS.find(k => k.id === id);
+function lineFor(id, card) {
+  const item = find(id);
+  const q = card && card.dataset.q === "3" ? 3 : 1;
+  const isKey = KEYS.includes(item);
+  const pkg = isKey ? PKG[id][q === 3 ? 1 : 0] : PKG[id];
+  return { id, pkg, name: isKey ? `${item.name} ключ` : `${item.name} ранг`, note: isKey ? (q === 3 ? "3 ключа" : "1 ключ") : "завинаги", price: q === 3 ? item.pack : item.price };
+}
+function renderCart() {
+  const box = document.getElementById("cart-lines");
+  box.innerHTML = cart.length ? "" : `<div class="empty-cart">Количката е празна.</div>`;
+  cart.forEach((l, i) => {
+    const d = document.createElement("div");
+    d.className = "line";
+    d.innerHTML = `<div>${l.name}<small>${l.note}</small></div><span class="num">${euro(l.price)}</span><button class="x" type="button" aria-label="Махни ${l.name}">×</button>`;
+    d.querySelector(".x").addEventListener("click", () => { cart.splice(i, 1); renderCart(); });
+    box.appendChild(d);
+  });
+  const total = cart.reduce((s, l) => s + l.price, 0);
+  document.getElementById("cart-total").textContent = euro(total);
+  const badge = document.getElementById("cart-count");
+  badge.textContent = cart.length; badge.hidden = !cart.length;
+}
+const drawer = document.getElementById("cart");
+function openCart() { drawer.classList.add("open"); drawer.setAttribute("aria-hidden", "false"); document.getElementById("nick").focus(); }
+function closeCart() { drawer.classList.remove("open"); drawer.setAttribute("aria-hidden", "true"); }
+document.getElementById("open-cart").addEventListener("click", openCart);
+drawer.querySelectorAll("[data-close-cart]").forEach(b => b.addEventListener("click", closeCart));
+document.addEventListener("click", e => {
+  const add = e.target.closest("[data-add]"), now = e.target.closest("[data-now]");
+  if (add) { cart.push(lineFor(add.dataset.add, add.closest(".card"))); renderCart(); say("Добавено в количката"); }
+  if (now) { cart.push(lineFor(now.dataset.now, now.closest(".card"))); renderCart(); openCart(); }
+});
+renderCart();
+
+/* ---------- checkout ---------- */
+const pay = document.getElementById("pay");
+document.getElementById("checkout").addEventListener("click", async () => {
+  const nick = document.getElementById("nick").value.trim();
+  const text = document.getElementById("pay-text"), go = document.getElementById("pay-go");
+  if (!cart.length) { say("Количката е празна"); return; }
+  if (!/^[A-Za-z0-9_]{3,16}$/.test(nick)) { say("Въведи ника си в Minecraft (3–16 символа)"); document.getElementById("nick").focus(); return; }
+  const total = euro(cart.reduce((s, l) => s + l.price, 0));
+  const btn = document.getElementById("checkout");
+  btn.disabled = true; btn.textContent = "Отваряме плащането…";
+  try {
+    const back = location.href.split("#")[0] + "#store";
+    const res = await fetch(`https://headless.tebex.io/api/accounts/${TEBEX_TOKEN}/baskets`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ complete_url: back, cancel_url: back, complete_auto_redirect: true, username: nick }) });
+    const basket = (await res.json()).data;
+    if (!basket || !basket.ident) throw new Error("basket");
+    const counts = {};
+    cart.forEach(l => { counts[l.pkg] = (counts[l.pkg] || 0) + 1; });
+    let last;
+    for (const [pkg, quantity] of Object.entries(counts)) {
+      const r = await fetch(`https://headless.tebex.io/api/baskets/${basket.ident}/packages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ package_id: Number(pkg), quantity }) });
+      last = (await r.json()).data;
+    }
+    const url = (last && last.links && last.links.checkout) || `https://pay.tebex.io/${basket.ident}`;
+    location.href = url;
+  } catch (e) {
+    text.textContent = `Поръчка за ${nick}: ${total}. Плащането не се отвори от тук. Довърши поръчката директно в магазина ни в Tebex.`;
+    go.href = STORE_URL; go.textContent = "Към магазина в Tebex";
+    pay.classList.add("open"); go.focus();
+  } finally {
+    btn.disabled = false; btn.textContent = "Към плащане";
+  }
+});
+document.getElementById("pay-close").addEventListener("click", () => pay.classList.remove("open"));
+pay.addEventListener("click", e => { if (e.target === pay) pay.classList.remove("open"); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { pay.classList.remove("open"); closeCart(); } });
+
+/* ---------- copy + toast ---------- */
+const toast = document.getElementById("toast");
+let tt;
+function say(m) { toast.textContent = m; toast.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove("show"), 1700); }
+document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(b.dataset.copy); say("Копирано: " + b.dataset.copy); }
+  catch (e) { say("Маркирай адреса и го копирай ръчно"); }
+}));
+
+/* ---------- routing on the hash ---------- */
+const VIEWS = ["home", "store", "rules"];
+function route() {
+  const h = location.hash.replace("#", "");
+  const view = VIEWS.includes(h) ? h : "home";
+  VIEWS.forEach(v => document.getElementById("view-" + v).classList.toggle("on", v === view));
+  document.querySelectorAll("[data-tab]").forEach(a => { if (a.dataset.tab === view) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  if (h === "vote") { document.getElementById("view-home").classList.add("on"); document.getElementById("vote").scrollIntoView(); }
+  else if (VIEWS.includes(h)) window.scrollTo(0, 0);
+}
+addEventListener("hashchange", route); route();
+
+/* ---------- sunburst behind the hero ---------- */
+(function () {
+  const c = document.getElementById("rays"); if (!c) return;
+  const g = c.getContext("2d");
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let w, h, a = 0;
+  function size() { const r = devicePixelRatio || 1; w = c.offsetWidth; h = c.offsetHeight; c.width = w * r; c.height = h * r; g.setTransform(r, 0, 0, r, 0, 0); draw(); }
+  function draw() {
+    g.clearRect(0, 0, w, h);
+    const cx = w * .78, cy = h * .45, R = Math.hypot(w, h), n = 24;
+    for (let i = 0; i < n; i++) {
+      const t0 = a + i / n * Math.PI * 2, t1 = t0 + Math.PI / n;
+      g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R, t0, t1); g.closePath();
+      g.fillStyle = i % 2 ? "rgba(224,57,43,.07)" : "rgba(242,182,50,.035)"; g.fill();
+    }
+    const grd = g.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * .7);
+    grd.addColorStop(0, "rgba(14,12,11,0)"); grd.addColorStop(1, "rgba(14,12,11,1)");
+    g.fillStyle = grd; g.fillRect(0, 0, w, h);
+  }
+  function tick() { a += .0009; draw(); requestAnimationFrame(tick); }
+  addEventListener("resize", size); size(); if (!still) tick();
+})();
+</script>
+</body>
+</html>

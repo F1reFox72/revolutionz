@@ -413,6 +413,7 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 16px; fl
         <button type="button" aria-pressed="true" data-cat="all">Всичко</button>
         <button type="button" aria-pressed="false" data-cat="ranks">Рангове</button>
         <button type="button" aria-pressed="false" data-cat="keys">Ключове</button>
+        <button type="button" aria-pressed="false" data-cat="pets">Любимци</button>
       </div>
     </div>
 
@@ -498,19 +499,19 @@ const RANKS = [
   { id: "artisan", name: "Artisan", tier: "--artisan", crown: "#1abc9c", price: 7.49, tag: "РАНГ I",
     desc: "Първата стъпка над Vagabond.",
     perks: ["Всичко от Vagabond", "<b>/ec</b> – ендър сандък навсякъде", "<b>/craft</b> – работна маса навсякъде", "<b>2</b> home-а", "Кит <b>Artisan</b>", "До <b>3</b> професии в Jobs", "Роля Artisan в Discord"],
-    reqs: ["10 ч", "20 куест т.", "4 000 блока", "$25 000"] },
+    reqs: ["10 ч", "30 куест т.", "4 000 блока", "$25 000"] },
   { id: "vanguard", name: "Vanguard", tier: "--vanguard", crown: "#e3a21a", price: 12.49, tag: "РАНГ II",
     desc: "Поправяш и се храниш, без да се прибираш.",
     perks: ["Всичко от Artisan", "<b>/repair</b> – поправя предмета в ръката", "<b>/feed</b> – засища глада", "<b>/anvil</b> – наковалня навсякъде", "<b>3</b> home-а", "<b>2</b> лични сандъка (<b>/pv</b>)", "Кит <b>Vanguard</b>", "До <b>4</b> професии в Jobs", "Роля Vanguard в Discord"],
-    reqs: ["35 ч", "50 куест т.", "15 000 блока", "$75 000"] },
+    reqs: ["35 ч", "100 куест т.", "15 000 блока", "$75 000"] },
   { id: "patrician", name: "Patrician", tier: "--patrician", crown: "#e91e63", price: 19.99, tag: "РАНГ III",
     desc: "Тук идва летенето.",
     perks: ["Всичко от Vanguard", "<b>/fly</b> – летене в survival", "<b>/back</b> – връща те на последното място", "<b>/grindstone</b> – точило навсякъде", "<b>5</b> home-а", "<b>3</b> лични сандъка (<b>/pv</b>)", "Кит <b>Patrician</b>", "До <b>5</b> професии в Jobs", "Роля Patrician в Discord"],
-    reqs: ["80 ч", "90 куест т.", "30 000 блока", "$150 000"] },
+    reqs: ["80 ч", "250 куест т.", "30 000 блока", "$150 000"] },
   { id: "mythic", name: "Mythic", tier: "--mythic", crown: "#9b59b6", price: 34.99, tag: "НАЙ-ВИСОК", hot: true,
     desc: "Върхът на Revolution Z.",
     perks: ["Всичко от Patrician (вкл. /fly)", "<b>/nick</b> – собствено име в чата", "<b>/hat</b> – слагаш всеки блок на главата", "<b>10</b> home-а", "<b>4</b> лични сандъка (<b>/pv</b>)", "Кит <b>Mythic</b>", "До <b>6</b> професии в Jobs", "Роля Mythic в Discord"],
-    reqs: ["150 ч", "150 куест т.", "60 000 блока", "$300 000"] }
+    reqs: ["150 ч", "500 куест т.", "60 000 блока", "$300 000"] }
 ];
 const KEYS = [
   { id: "nature", name: "Nature", tier: "--artisan", color: "#3fa34d", price: 1.50, pack: 4.00,
@@ -527,7 +528,24 @@ const KEYS = [
 
 // Tebex packages (headless API, public token is safe to share)
 const TEBEX_TOKEN = "15b66-14e298e6ad6d5cb155ab18430e5ac743dc580297";
-const PKG = { artisan: 7810571, vanguard: 7810573, patrician: 7810577, mythic: 7810579, nature: [7810587, 7810588], inferno: [7810589, 7810593] };
+// Любимци: летят до теб и дават ефекти, докато са извикани (/lyubimci в играта)
+const PETS = [
+  { id: "pet_dolphin", name: "Делфин", tier: "--artisan", icon: "dolphin", price: 3.00, tag: "ЛЮБИМЕЦ",
+    desc: "Кралят на водата: океани, монументи и строене под вода.",
+    perks: ["<b>Water Breathing</b> – дишаш под вода", "<b>Dolphin's Grace</b> – плуваш много бързо", "<b>Night Vision</b> – виждаш в тъмното", "Лети в кръг около теб"] },
+  { id: "pet_phoenix", name: "Феникс", tier: "--blood", icon: "phoenix", price: 4.00, tag: "ЛЮБИМЕЦ",
+    desc: "С него Nether-ът става лесен, а копането по-бързо.",
+    perks: ["<b>Fire Resistance</b> – не гориш в лава и огън", "<b>Night Vision</b> – виждаш в тъмното", "<b>Haste I</b> – копаеш по-бързо", "Огън и червен дим около него"] },
+  { id: "pet_bundle", name: "Делфин + Феникс", tier: "--gold", icon: "bundle", price: 6.00, tag: "ПАКЕТ", hot: true,
+    desc: "Двата любимеца заедно, по-изгодно.",
+    perks: ["<b>Делфин</b> и <b>Феникс</b> завинаги", "Извикваш, когото искаш, с <b>/lyubimci</b>", "Спестяваш <b>€1.00</b>"] }
+];
+const PET_ICONS = {
+  dolphin: { rows: ["............","......B.....",".....BB.....","...BBBBBB...","..BBBBBBBBB.",".BBEBBBBBBBB","BBBBBBBBB..B",".LLLLLBBB...","..LLLLBB....","....B.BB....","......B.....","............"], pal: { B: "#4f8fbf", L: "#cfe3f2", E: "#0e0c0b" } },
+  phoenix: { rows: ["O....YY....O","OO..YYYY..OO",".OO.YRRY.OO.",".OOORRRROOO.","..ORRRRRRO..","...RRRRRR...","....RRRR....","....ORRO....","...O.YY.O...","..O..YY..O..",".....Y.Y....","............"], pal: { R: "#e0392b", O: "#f07a26", Y: "#f2b632" } },
+  bundle: { rows: [".....YY.....",".....YY.....","....YYYY....","YYYYYYYYYYYY",".YYYYYYYYYY.","..YYYYYYYY..","...YYYYYY...","..YYYYYYYY..","..YYY..YYY..",".YYY....YYY.",".YY......YY.","............"], pal: { Y: "#f2b632" } }
+};
+const PKG = { pet_dolphin: null, pet_phoenix: null, pet_bundle: null, artisan: 7810571, vanguard: 7810573, patrician: 7810577, mythic: 7810579, nature: [7810587, 7810588], inferno: [7810589, 7810593] };
 
 const euro = n => "€" + n.toFixed(2);
 
@@ -679,6 +697,36 @@ const rankBox = document.getElementById("rank-cards");
 RANKS.forEach(r => rankBox.appendChild(rankCard(r)));
 const keyBox = document.getElementById("key-cards");
 KEYS.forEach(k => keyBox.appendChild(keyCard(k)));
+function petCard(p) {
+  const el = document.createElement("article");
+  el.className = "card" + (p.hot ? " legend" : "");
+  el.style.setProperty("--tier", `var(${p.tier})`);
+  el.innerHTML = `
+    <span class="tag${p.hot ? " hot" : ""}">${p.tag}</span>
+    <canvas class="ico" width="12" height="12" aria-hidden="true"></canvas>
+    <h3>${p.name}</h3>
+    <p class="desc">${p.desc}</p>
+    <ul class="perks">${p.perks.map(x => `<li><span>${x}</span></li>`).join("")}</ul>
+    <div class="price-row">
+      <div class="price num">${euro(p.price)}<small>завинаги</small></div>
+      <div class="buy">
+        <button class="btn btn-line btn-sm" type="button" data-add="${p.id}">В количката</button>
+        <button class="btn btn-red btn-sm" type="button" data-now="${p.id}">Купи сега</button>
+      </div>
+    </div>`;
+  const ic = PET_ICONS[p.icon];
+  paint(el.querySelector("canvas"), ic.rows, ic.pal);
+  return el;
+}
+{
+  const anchor = document.getElementById("key-cards").closest("section");
+  const sec = document.createElement("section");
+  sec.className = "group"; sec.dataset.group = "pets";
+  sec.innerHTML = `<h2>Любимци <small>летят до теб и дават ефекти · извикваш ги с /lyubimci</small></h2><div class="cards" id="pet-cards"></div><div class="earned-only">Други любимци се печелят само в играта: <span class="chip">Котенце</span><span class="chip">Пчеличка</span><span class="chip">Прилепче</span><span class="chip">Лисиче</span><span class="chip">Вълче</span><span class="chip">Жабче</span><span class="chip">Драконче</span><span class="chip">Орел</span></div>`;
+  anchor.after(sec);
+  const petBox = sec.querySelector("#pet-cards");
+  PETS.forEach(p => petBox.appendChild(petCard(p)));
+}
 
 /* ---------- categories ---------- */
 document.querySelectorAll("[data-cat]").forEach(b => b.addEventListener("click", () => {
@@ -688,12 +736,13 @@ document.querySelectorAll("[data-cat]").forEach(b => b.addEventListener("click",
 
 /* ---------- cart ---------- */
 const cart = [];
-const find = id => RANKS.find(r => r.id === id) || KEYS.find(k => k.id === id);
+const find = id => RANKS.find(r => r.id === id) || KEYS.find(k => k.id === id) || PETS.find(p => p.id === id);
 function lineFor(id, card) {
   const item = find(id);
   const q = card && card.dataset.q === "3" ? 3 : 1;
-  const isKey = KEYS.includes(item);
+  const isKey = KEYS.includes(item), isPet = PETS.includes(item);
   const pkg = isKey ? PKG[id][q === 3 ? 1 : 0] : PKG[id];
+  if (isPet) return { id, pkg, name: item.id === "pet_bundle" ? "Пакет любимци" : `${item.name} (любимец)`, note: "завинаги", price: item.price };
   return { id, pkg, name: isKey ? `${item.name} ключ` : `${item.name} ранг`, note: isKey ? (q === 3 ? "3 ключа" : "1 ключ") : "завинаги", price: q === 3 ? item.pack : item.price };
 }
 function renderCart() {
@@ -731,6 +780,12 @@ document.getElementById("checkout").addEventListener("click", async () => {
   if (!cart.length) { say("Количката е празна"); return; }
   if (!/^[A-Za-z0-9_]{3,16}$/.test(nick)) { say("Въведи ника си в Minecraft (3–16 символа)"); document.getElementById("nick").focus(); return; }
   const total = euro(cart.reduce((s, l) => s + l.price, 0));
+  if (cart.some(l => !l.pkg)) {
+    text.textContent = `Поръчка за ${nick}: ${total}. Любимците още не са пуснати за онлайн плащане. Пиши ни в Discord и ще ги получиш веднага след плащане.`;
+    go.href = DISCORD_URL; go.textContent = "Към Discord";
+    pay.classList.add("open"); go.focus();
+    return;
+  }
   const btn = document.getElementById("checkout");
   btn.disabled = true; btn.textContent = "Отваряме плащането…";
   try {
